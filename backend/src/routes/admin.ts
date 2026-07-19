@@ -8,13 +8,30 @@ import crypto from 'crypto';
 
 const router = Router();
 
-// HMAC secret derived from server env or static salt
-const SECRET_SALT = process.env.ADMIN_PASSWORD || 'arcade-tracker-secret-salt';
+/**
+ * Sanitizes input string or environment variable by trimming whitespace
+ * (including \r, \n, spaces) and stripping accidental quotes around values.
+ */
+function cleanValue(val: unknown): string {
+  if (typeof val !== 'string') return '';
+  let cleaned = val.trim();
+  if (
+    (cleaned.startsWith('"') && cleaned.endsWith('"')) ||
+    (cleaned.startsWith("'") && cleaned.endsWith("'"))
+  ) {
+    cleaned = cleaned.slice(1, -1).trim();
+  }
+  return cleaned;
+}
+
+function getSecretSalt(): string {
+  return cleanValue(process.env.ADMIN_PASSWORD) || 'arcade-tracker-secret-salt';
+}
 
 function generateToken(username: string): string {
   const timestamp = Date.now();
   const payload = `${username}:${timestamp}`;
-  const hmac = crypto.createHmac('sha256', SECRET_SALT).update(payload).digest('hex');
+  const hmac = crypto.createHmac('sha256', getSecretSalt()).update(payload).digest('hex');
   return Buffer.from(JSON.stringify({ payload, hmac })).toString('base64');
 }
 
@@ -22,7 +39,7 @@ function verifyToken(token: string): boolean {
   try {
     const raw = Buffer.from(token, 'base64').toString('utf-8');
     const { payload, hmac } = JSON.parse(raw);
-    const expectedHmac = crypto.createHmac('sha256', SECRET_SALT).update(payload).digest('hex');
+    const expectedHmac = crypto.createHmac('sha256', getSecretSalt()).update(payload).digest('hex');
     if (hmac !== expectedHmac) return false;
 
     // Optional: check token age (e.g. 24 hours = 86400000 ms)
@@ -46,6 +63,12 @@ router.post('/login', (req: Request, res: Response): void => {
   const expectedUsername = process.env.ADMIN_USERNAME;
   const expectedPassword = process.env.ADMIN_PASSWORD;
 
+  const cleanExpectedUsername = cleanValue(expectedUsername);
+  const cleanExpectedPassword = cleanValue(expectedPassword);
+
+  const cleanInputUsername = cleanValue(username);
+  const cleanInputPassword = cleanValue(password);
+
   if (!expectedUsername || !expectedPassword) {
     res.status(500).json({
       success: false,
@@ -54,11 +77,15 @@ router.post('/login', (req: Request, res: Response): void => {
     return;
   }
 
-  if (username === expectedUsername && password === expectedPassword) {
-    const token = generateToken(username);
+  const isUsernameMatch = (username === expectedUsername) || (cleanInputUsername === cleanExpectedUsername);
+  const isPasswordMatch = (password === expectedPassword) || (cleanInputPassword === cleanExpectedPassword);
+
+  if (isUsernameMatch && isPasswordMatch) {
+    const token = generateToken(cleanInputUsername || username);
     res.json({
       success: true,
       token,
+      data: { token },
       message: 'Authentication successful',
     });
   } else {
