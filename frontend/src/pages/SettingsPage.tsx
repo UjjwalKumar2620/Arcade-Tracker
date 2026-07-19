@@ -8,21 +8,19 @@ import {
   Shield, Link2, CheckCircle, AlertCircle, Save,
   RefreshCw, HelpCircle, Lock, LogOut, User, KeyRound,
 } from 'lucide-react';
-import { fetchSettings, updateSettings, refreshData } from '../lib/api';
+import { fetchSettings, updateSettings, refreshData, adminLogin, adminVerifyToken } from '../lib/api';
 import { PageHeader, LoadingSpinner, GlassCard } from '../components/ui';
 
-const ADMIN_USERNAME = 'Ujjwal Kumar';
-const ADMIN_PASSWORD = 'ARCADEFACILITATOR2026UJJANSH';
-const AUTH_KEY = 'arcade_admin_auth_session';
+const AUTH_TOKEN_KEY = 'arcade_admin_token';
 
 export default function SettingsPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return sessionStorage.getItem(AUTH_KEY) === 'true';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   // Auth form states
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
+  const [loggingIn, setLoggingIn] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Settings states
@@ -33,10 +31,30 @@ export default function SettingsPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      loadSettings();
+    const token = sessionStorage.getItem(AUTH_TOKEN_KEY);
+    if (token) {
+      adminVerifyToken(token)
+        .then(res => {
+          if (res.data?.valid || res.success) {
+            setIsAuthenticated(true);
+            loadSettings();
+          } else {
+            sessionStorage.removeItem(AUTH_TOKEN_KEY);
+            setIsAuthenticated(false);
+          }
+        })
+        .catch(() => {
+          sessionStorage.removeItem(AUTH_TOKEN_KEY);
+          setIsAuthenticated(false);
+        })
+        .finally(() => {
+          setCheckingAuth(false);
+        });
+    } else {
+      setIsAuthenticated(false);
+      setCheckingAuth(false);
     }
-  }, [isAuthenticated]);
+  }, []);
 
   async function loadSettings() {
     try {
@@ -53,22 +71,31 @@ export default function SettingsPage() {
     }
   }
 
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setAuthError(null);
+    setLoggingIn(true);
 
-    if (usernameInput.trim() === ADMIN_USERNAME && passwordInput.trim() === ADMIN_PASSWORD) {
-      sessionStorage.setItem(AUTH_KEY, 'true');
-      setIsAuthenticated(true);
-      setUsernameInput('');
-      setPasswordInput('');
-    } else {
-      setAuthError('Invalid username or password. Access denied.');
+    try {
+      const res = await adminLogin(usernameInput.trim(), passwordInput.trim());
+      if (res.data?.token) {
+        sessionStorage.setItem(AUTH_TOKEN_KEY, res.data.token);
+        setIsAuthenticated(true);
+        setUsernameInput('');
+        setPasswordInput('');
+        loadSettings();
+      } else {
+        setAuthError(res.error || 'Invalid username or password. Access denied.');
+      }
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Invalid username or password. Access denied.');
+    } finally {
+      setLoggingIn(false);
     }
   }
 
   function handleLogout() {
-    sessionStorage.removeItem(AUTH_KEY);
+    sessionStorage.removeItem(AUTH_TOKEN_KEY);
     setIsAuthenticated(false);
     setMessage(null);
   }
@@ -120,6 +147,8 @@ export default function SettingsPage() {
       setTesting(false);
     }
   }
+
+  if (checkingAuth) return <LoadingSpinner size="lg" />;
 
   // ── 1. Unauthenticated State: Show Admin Login Screen ─────
   if (!isAuthenticated) {
@@ -222,11 +251,10 @@ export default function SettingsPage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`flex items-center gap-3 p-4 rounded-xl text-sm ${
-            message.type === 'success'
+          className={`flex items-center gap-3 p-4 rounded-xl text-sm ${message.type === 'success'
               ? 'bg-[rgba(52,168,83,0.15)] border border-[rgba(52,168,83,0.3)] text-[#5BB974]'
               : 'bg-[rgba(234,67,53,0.15)] border border-[rgba(234,67,53,0.3)] text-[#EE675C]'
-          }`}
+            }`}
         >
           {message.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
           <span>{message.text}</span>

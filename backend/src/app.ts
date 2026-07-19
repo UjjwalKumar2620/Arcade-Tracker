@@ -10,6 +10,7 @@ import { config } from './config/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import dataRouter from './routes/data.js';
 import settingsRouter from './routes/settings.js';
+import adminRouter from './routes/admin.js';
 
 const app = express();
 
@@ -19,7 +20,7 @@ app.use(cors({
   origin: config.frontend.url,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 // ==================== PARSING & LOGGING ====================
@@ -38,6 +39,9 @@ app.get('/api/health', (_req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// Admin authentication routes
+app.use('/api/admin', adminRouter);
 
 // Data routes (all Google Sheet operations)
 app.use('/api/data', dataRouter);
