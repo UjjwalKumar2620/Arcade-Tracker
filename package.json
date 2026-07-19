@@ -3,11 +3,15 @@
   "version": "3.0.0",
   "description": "Google Cloud Arcade Progress Tracker — Zero Database, Google Sheets as Sole Data Source",
   "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "scripts": {
-    "dev:backend": "npm --prefix backend run dev",
-    "dev:frontend": "npm --prefix frontend run dev",
-    "build:backend": "npm --prefix backend install && npm --prefix backend run build",
-    "build:frontend": "npm --prefix frontend install && npm --prefix frontend run build",
-    "build": "npm run build:backend && npm run build:frontend"
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build:backend": "npm run build --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "build": "npm run build --workspace=backend && npm run build --workspace=frontend"
   }
 }
