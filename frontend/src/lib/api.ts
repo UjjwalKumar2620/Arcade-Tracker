@@ -41,20 +41,6 @@ export const fetchChartData = (type: string) =>
 export const refreshData = () =>
   request('/api/data/refresh', { method: 'POST' });
 
-// ── Admin Auth ──────────────────────────────────────────────
-export const adminLogin = (username: string, password: string) =>
-  request<{ token: string; message: string }>('/api/admin/login', {
-    method: 'POST',
-    body: JSON.stringify({ username, password }),
-  });
-
-export const adminVerifyToken = (token: string) =>
-  request<{ valid: boolean }>('/api/admin/verify', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ token }),
-  });
-
 // ── Settings ────────────────────────────────────────────────
 export const fetchSettings = () => request('/api/settings');
 

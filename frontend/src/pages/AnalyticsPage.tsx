@@ -218,7 +218,7 @@ export default function AnalyticsPage() {
           {/* Top Performers */}
           <ChartCard
             title="Leaderboard Top 10 (Total Points)"
-            subtitle="Participants ranked by Total Points = (Arcade Games × 3) + Skill Badges"
+            subtitle="Participants ranked by Total Points = Arcade Games + ⌊Skill Badges ÷ 2⌋"
             icon={<Trophy size={20} className="text-[#FBBC04]" />}
             data={charts.topPerformers}
             type="horizontal"

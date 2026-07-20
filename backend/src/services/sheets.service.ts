@@ -179,7 +179,7 @@ export async function fetchGoogleSheet(sheetUrl: string): Promise<SheetFetchResu
     const skillBadges = parseNum(getVal('skill_badges'));
     const arcadeGames = parseNum(getVal('arcade_games_completed'));
     const digitalBadge = hasGearBadge(gearStatus);
-    const totalPoints = (arcadeGames * 3) + skillBadges;
+    const totalPoints = arcadeGames + Math.floor(skillBadges / 2);
 
     // Compute completion percentage
     const targetBadges = 15;

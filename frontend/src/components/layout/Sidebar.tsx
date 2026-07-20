@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard, Users, BarChart3, Shield,
+  LayoutDashboard, Users, BarChart3,
   Trophy, Menu, X, ChevronLeft,
 } from 'lucide-react';
 
@@ -13,7 +13,6 @@ const navItems = [
   { to: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
   { to: '/participants', label: 'Participants', icon: <Users size={20} /> },
   { to: '/analytics', label: 'Analytics', icon: <BarChart3 size={20} /> },
-  { to: '/settings', label: 'Admin Panel', icon: <Shield size={20} /> },
 ];
 
 export default function Sidebar({ children }: { children: React.ReactNode }) {

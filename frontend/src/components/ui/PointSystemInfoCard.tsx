@@ -28,17 +28,17 @@ export function PointSystemInfoCard({ className = '' }: { className?: string }) 
         <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-medium pt-2 sm:pt-0 border-t sm:border-t-0 border-[rgba(255,255,255,0.08)]">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[rgba(255,255,255,0.05)] text-[#E8EAED]">
             <Star size={14} className="text-[#FBBC04]" />
-            <span>1 Skill Badge = <strong className="text-[#FBBC04]">1 Pt</strong></span>
+            <span>2 Skill Badges = <strong className="text-[#FBBC04]">1 Pt</strong></span>
           </div>
 
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[rgba(255,255,255,0.05)] text-[#E8EAED]">
             <Gamepad2 size={14} className="text-[#EA4335]" />
-            <span>1 Arcade Game = <strong className="text-[#EE675C]">3 Pts</strong></span>
+            <span>1 Arcade Game = <strong className="text-[#EE675C]">1 Pt</strong></span>
           </div>
 
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[rgba(66,133,244,0.15)] text-[#8AB4F8] font-bold">
             <BarChart2 size={14} />
-            <span>Total Points = (Arcade Games × 3) + Skill Badges</span>
+            <span>Total Points = Arcade Games + ⌊Skill Badges ÷ 2⌋</span>
           </div>
         </div>
       </div>
