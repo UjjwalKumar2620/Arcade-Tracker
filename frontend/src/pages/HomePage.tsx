@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 import {
   ExternalLink, Video, FileText, Users, HeartHandshake,
   ChevronDown, ChevronUp, AlertTriangle, Rocket,
-  ArrowRight, BarChart3, Sparkles,
+  ArrowRight, BarChart3, Sparkles, Link2, UserX,
 } from 'lucide-react';
 import { fetchParticipants } from '../lib/api';
 import { GlassCard, LoadingSpinner } from '../components/ui';
@@ -178,6 +178,16 @@ export default function HomePage() {
   const notStarted = participants.filter(
     p => p.skill_badges === 0 && p.arcade_games_completed === 0,
   );
+
+  // Wrong profiles: status exists and is NOT a "good" status
+  const GOOD_STATUSES = ['all good', 'yes', 'ok', 'valid', 'verified', 'success'];
+  const isWrongStatus = (status: string | null): boolean => {
+    if (!status) return false; // null/empty means not submitted — not "wrong"
+    return !GOOD_STATUSES.includes(status.toLowerCase().trim());
+  };
+
+  const wrongDevProfile = participants.filter(p => isWrongStatus(p.developer_profile_status));
+  const wrongSkillsProfile = participants.filter(p => isWrongStatus(p.google_skills_profile_status));
 
   const helperAssignments = assignToHelpers(notStarted);
 
@@ -377,6 +387,68 @@ export default function HomePage() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </CollapsibleSection>
+
+          {/* Wrong Developer Profile */}
+          <CollapsibleSection
+            title="Wrong Google Developer Profile"
+            icon={<Link2 size={18} className="text-[#FFB800]" />}
+            count={wrongDevProfile.length}
+            color="#FFB800"
+            borderColor="rgba(255, 184, 0, 0.2)"
+            bgColor="rgba(255, 184, 0, 0.04)"
+          >
+            {wrongDevProfile.length === 0 ? (
+              <p className="text-sm text-[#9AA0A6] py-2">All developer profiles look good! ✅</p>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-2 max-h-80 overflow-y-auto">
+                {wrongDevProfile.map((p, i) => (
+                  <div
+                    key={p.email}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.03)] text-sm"
+                  >
+                    <span className="w-5 h-5 rounded-full bg-[rgba(255,184,0,0.2)] text-[#FFB800] flex items-center justify-center text-[10px] font-bold">
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <span className="text-[#E8EAED] truncate block text-xs">{p.name}</span>
+                      <span className="text-[10px] text-[#FFB800] truncate block">{p.developer_profile_status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CollapsibleSection>
+
+          {/* Wrong Skills Profile */}
+          <CollapsibleSection
+            title="Wrong Google Skills Profile"
+            icon={<UserX size={18} className="text-[#7C3AED]" />}
+            count={wrongSkillsProfile.length}
+            color="#7C3AED"
+            borderColor="rgba(124, 58, 237, 0.2)"
+            bgColor="rgba(124, 58, 237, 0.04)"
+          >
+            {wrongSkillsProfile.length === 0 ? (
+              <p className="text-sm text-[#9AA0A6] py-2">All skills profiles look good! ✅</p>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-2 max-h-80 overflow-y-auto">
+                {wrongSkillsProfile.map((p, i) => (
+                  <div
+                    key={p.email}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.03)] text-sm"
+                  >
+                    <span className="w-5 h-5 rounded-full bg-[rgba(124,58,237,0.2)] text-[#7C3AED] flex items-center justify-center text-[10px] font-bold">
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <span className="text-[#E8EAED] truncate block text-xs">{p.name}</span>
+                      <span className="text-[10px] text-[#7C3AED] truncate block">{p.google_skills_profile_status}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </CollapsibleSection>
