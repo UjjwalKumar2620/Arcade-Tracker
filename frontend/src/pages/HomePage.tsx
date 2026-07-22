@@ -1,0 +1,413 @@
+// ============================================================
+// Arcade Tracker — Home Page
+// Landing page with resource links, helpers, and participant
+// status sections (unclaimed credits, not started labs).
+// ============================================================
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import {
+  ExternalLink, Video, FileText, Users, HeartHandshake,
+  ChevronDown, ChevronUp, AlertTriangle, Rocket,
+  ArrowRight, BarChart3, Gamepad2, Sparkles,
+} from 'lucide-react';
+import { fetchParticipants } from '../lib/api';
+import { GlassCard, LoadingSpinner } from '../components/ui';
+import type { Participant } from '../types';
+
+// ── Helpers ──────────────────────────────────────────────────
+const HELPERS = [
+  'Ujjwal', 'Rupesh', 'Dev', 'Jiya', 'Sumit',
+  'Knaishka Bhatt', 'Ayush Hemdani', 'Chesta Munjal',
+  'Khushi Jain', 'Shilpi Aggarwal', 'Diksha Jain', 'Naitik',
+];
+
+// ── Helper Assignment Logic ─────────────────────────────────
+function assignToHelpers(nonStarters: Participant[]): Record<string, Participant[]> {
+  const assignments: Record<string, Participant[]> = {};
+  for (const h of HELPERS) assignments[h] = [];
+
+  // Anshika Tomar → always Ujjwal
+  const anshikaIndex = nonStarters.findIndex(p =>
+    p.name.toLowerCase().includes('anshika tomar'),
+  );
+  let remaining = [...nonStarters];
+  if (anshikaIndex !== -1) {
+    assignments['Ujjwal'].push(remaining[anshikaIndex]);
+    remaining.splice(anshikaIndex, 1);
+  }
+
+  // Distribute remaining equally
+  const perHelper = Math.floor(remaining.length / HELPERS.length);
+  const extraCount = remaining.length % HELPERS.length;
+  let idx = 0;
+
+  for (let h = 0; h < HELPERS.length; h++) {
+    const helperName = HELPERS[h];
+    // Ujjwal (index 0) gets the extra people if there's a remainder
+    const count = perHelper + (h === 0 && extraCount > 0 ? extraCount : 0);
+    for (let c = 0; c < count && idx < remaining.length; c++, idx++) {
+      assignments[helperName].push(remaining[idx]);
+    }
+  }
+
+  return assignments;
+}
+
+// ── Resource Links ───────────────────────────────────────────
+const RESOURCES = [
+  {
+    title: 'How to Claim Credits',
+    description: 'Watch this video guide to learn how to claim your Google Cloud credits for the Arcade program.',
+    url: 'https://www.youtube.com/watch?v=pA03jYwsDS4',
+    icon: <Video size={22} />,
+    color: '#EA4335',
+    bgColor: 'rgba(234, 67, 53, 0.12)',
+    borderColor: 'rgba(234, 67, 53, 0.3)',
+  },
+  {
+    title: 'How to Do Labs Guide',
+    description: 'Step-by-step documentation on how to complete the Arcade labs and earn badges.',
+    url: 'https://docs.google.com/document/d/1BPUKyED6HhWd3zim-S4xPlWls7-3n1ci44ly395x4Yg/edit?tab=t.0#heading=h.wdnkb8i6rll7',
+    icon: <FileText size={22} />,
+    color: '#4285F4',
+    bgColor: 'rgba(66, 133, 244, 0.12)',
+    borderColor: 'rgba(66, 133, 244, 0.3)',
+  },
+];
+
+// ── Collapsible Section Component ────────────────────────────
+function CollapsibleSection({
+  title,
+  icon,
+  count,
+  color,
+  borderColor,
+  bgColor,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  count: number;
+  color: string;
+  borderColor: string;
+  bgColor: string;
+  children: React.ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-xl overflow-hidden"
+      style={{ border: `1px solid ${borderColor}`, background: bgColor }}
+    >
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-5 py-4 transition-all hover:bg-[rgba(255,255,255,0.03)]"
+      >
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg" style={{ backgroundColor: `${color}20` }}>
+            {icon}
+          </div>
+          <div className="text-left">
+            <h3 className="text-sm font-semibold text-[#E8EAED]">{title}</h3>
+            <p className="text-xs text-[#9AA0A6]">{count} participant{count !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span
+            className="text-xs font-bold px-2.5 py-1 rounded-full"
+            style={{ backgroundColor: `${color}20`, color }}
+          >
+            {count}
+          </span>
+          {isOpen ? (
+            <ChevronUp size={18} className="text-[#9AA0A6]" />
+          ) : (
+            <ChevronDown size={18} className="text-[#9AA0A6]" />
+          )}
+        </div>
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 pb-4 pt-1 border-t" style={{ borderColor }}>
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// ── Main Component ───────────────────────────────────────────
+export default function HomePage() {
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetchParticipants({ pageSize: '1000' });
+        setParticipants((res.data ?? []) as Participant[]);
+      } catch {
+        // fail silently — sections just show 0
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  const notClaimed = participants.filter(
+    p => !p.access_code || p.access_code.toLowerCase() === 'no' || p.access_code.toLowerCase() === 'not redeemed',
+  );
+
+  const notStarted = participants.filter(
+    p => p.skill_badges === 0 && p.arcade_games_completed === 0,
+  );
+
+  const helperAssignments = assignToHelpers(notStarted);
+
+  return (
+    <div className="p-6 lg:p-8 space-y-8 max-w-5xl mx-auto">
+      {/* ── Hero ──────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center py-8 sm:py-12"
+      >
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
+          className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#8B5CF6] via-[#3B82F6] to-[#34A853] mx-auto flex items-center justify-center shadow-2xl shadow-[#8B5CF6]/30 mb-6"
+        >
+          <Gamepad2 size={36} className="text-white" />
+        </motion.div>
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gradient mb-3">
+          Google Cloud Arcade Tracker
+        </h1>
+        <p className="text-sm sm:text-base text-[#9AA0A6] max-w-lg mx-auto">
+          Track your Arcade progress, earn badges, complete labs, and level up your cloud skills.
+        </p>
+      </motion.div>
+
+      {/* ── Resource Links ─────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+      >
+        <h2 className="text-lg font-bold text-[#E8EAED] mb-4 flex items-center gap-2">
+          <Sparkles size={20} className="text-[#FBBC04]" /> Helpful Resources
+        </h2>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {RESOURCES.map((r) => (
+            <a
+              key={r.title}
+              href={r.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="glass-card group flex items-start gap-4 hover:border-opacity-60 transition-all"
+              style={{ borderColor: r.borderColor }}
+            >
+              <div
+                className="p-3 rounded-xl flex-shrink-0 transition-transform group-hover:scale-110"
+                style={{ backgroundColor: r.bgColor, color: r.color }}
+              >
+                {r.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-sm font-semibold text-[#E8EAED]">{r.title}</h3>
+                  <ExternalLink size={14} className="text-[#5F6368] group-hover:text-[#8AB4F8] transition-colors flex-shrink-0" />
+                </div>
+                <p className="text-xs text-[#9AA0A6] leading-relaxed">{r.description}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* ── Helpers Section ────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+      >
+        <GlassCard hover={false} className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-[rgba(139,92,246,0.15)] text-[#A855F7]">
+              <HeartHandshake size={22} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-[#E8EAED]">Our Helpers</h2>
+              <p className="text-xs text-[#9AA0A6]">
+                You can ask your doubts from them in the group.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {HELPERS.map((name, i) => (
+              <motion.span
+                key={name}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 + i * 0.04 }}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium"
+                style={{
+                  background: `${COLORS_HELPERS[i % COLORS_HELPERS.length]}15`,
+                  color: COLORS_HELPERS[i % COLORS_HELPERS.length],
+                  border: `1px solid ${COLORS_HELPERS[i % COLORS_HELPERS.length]}30`,
+                }}
+              >
+                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                  style={{ background: COLORS_HELPERS[i % COLORS_HELPERS.length] }}
+                >
+                  {name.charAt(0)}
+                </span>
+                {name}
+              </motion.span>
+            ))}
+          </div>
+        </GlassCard>
+      </motion.div>
+
+      {/* ── Participant Status Sections ────────────────── */}
+      {loading ? (
+        <LoadingSpinner size="md" />
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="space-y-4"
+        >
+          <h2 className="text-lg font-bold text-[#E8EAED] flex items-center gap-2">
+            <Users size={20} className="text-[#3B82F6]" /> Participant Status
+          </h2>
+
+          {/* Not Claimed Credits */}
+          <CollapsibleSection
+            title="People Who Have Not Claimed Credits"
+            icon={<AlertTriangle size={18} className="text-[#FBBC04]" />}
+            count={notClaimed.length}
+            color="#FBBC04"
+            borderColor="rgba(251, 188, 4, 0.2)"
+            bgColor="rgba(251, 188, 4, 0.04)"
+          >
+            {notClaimed.length === 0 ? (
+              <p className="text-sm text-[#9AA0A6] py-2">Everyone has claimed their credits! 🎉</p>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-2 max-h-80 overflow-y-auto">
+                {notClaimed.map((p, i) => (
+                  <div
+                    key={p.email}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.03)] text-sm"
+                  >
+                    <span className="w-5 h-5 rounded-full bg-[rgba(251,188,4,0.2)] text-[#FBBC04] flex items-center justify-center text-[10px] font-bold">
+                      {i + 1}
+                    </span>
+                    <span className="text-[#E8EAED] truncate">{p.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CollapsibleSection>
+
+          {/* Not Started Labs */}
+          <CollapsibleSection
+            title="People Who Have Not Started Labs"
+            icon={<Rocket size={18} className="text-[#EA4335]" />}
+            count={notStarted.length}
+            color="#EA4335"
+            borderColor="rgba(234, 67, 53, 0.2)"
+            bgColor="rgba(234, 67, 53, 0.04)"
+          >
+            {notStarted.length === 0 ? (
+              <p className="text-sm text-[#9AA0A6] py-2">Everyone has started! Great progress! 🚀</p>
+            ) : (
+              <div className="space-y-4 pt-2">
+                {HELPERS.map((helper) => {
+                  const assigned = helperAssignments[helper];
+                  if (!assigned || assigned.length === 0) return null;
+                  return (
+                    <div key={helper}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-bold text-[#A855F7] bg-[rgba(139,92,246,0.15)] px-2.5 py-1 rounded-md">
+                          {helper}
+                        </span>
+                        <span className="text-[10px] text-[#9AA0A6]">
+                          ({assigned.length} assigned)
+                        </span>
+                      </div>
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-1.5 pl-1">
+                        {assigned.map((p, i) => (
+                          <div
+                            key={p.email}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[rgba(255,255,255,0.03)] text-sm"
+                          >
+                            <span className="w-4 h-4 rounded-full bg-[rgba(234,67,53,0.2)] text-[#EE675C] flex items-center justify-center text-[9px] font-bold">
+                              {i + 1}
+                            </span>
+                            <span className="text-[#E8EAED] truncate text-xs">{p.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CollapsibleSection>
+        </motion.div>
+      )}
+
+      {/* ── Quick Navigation ──────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45 }}
+        className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+      >
+        <Link to="/dashboard" className="glass-card flex items-center justify-between group">
+          <div className="flex items-center gap-3">
+            <BarChart3 size={20} className="text-[#4285F4]" />
+            <span className="text-sm font-medium text-[#E8EAED]">Dashboard</span>
+          </div>
+          <ArrowRight size={16} className="text-[#5F6368] group-hover:text-[#8AB4F8] transition-colors" />
+        </Link>
+        <Link to="/participants" className="glass-card flex items-center justify-between group">
+          <div className="flex items-center gap-3">
+            <Users size={20} className="text-[#FBBC04]" />
+            <span className="text-sm font-medium text-[#E8EAED]">Participants</span>
+          </div>
+          <ArrowRight size={16} className="text-[#5F6368] group-hover:text-[#8AB4F8] transition-colors" />
+        </Link>
+        <Link to="/analytics" className="glass-card flex items-center justify-between group">
+          <div className="flex items-center gap-3">
+            <Gamepad2 size={20} className="text-[#34A853]" />
+            <span className="text-sm font-medium text-[#E8EAED]">Analytics</span>
+          </div>
+          <ArrowRight size={16} className="text-[#5F6368] group-hover:text-[#8AB4F8] transition-colors" />
+        </Link>
+      </motion.div>
+    </div>
+  );
+}
+
+// Helper badge colors
+const COLORS_HELPERS = [
+  '#8B5CF6', '#3B82F6', '#34A853', '#FBBC04', '#EA4335', '#EC4899',
+  '#14B8A6', '#F97316', '#6366F1', '#84CC16', '#06B6D4', '#E11D48',
+];

@@ -66,7 +66,6 @@ export default function DashboardPage() {
           <p className="text-sm text-[#9AA0A6] mb-6 max-w-md mx-auto">{error}</p>
           <div className="flex gap-3 justify-center">
             <button onClick={loadStats} className="px-6 py-3 rounded-xl bg-[#4285F4] text-white font-medium hover:bg-[#5294FF] transition-colors">Retry</button>
-            <Link to="/settings" className="px-6 py-3 rounded-xl glass-subtle text-[#8AB4F8] font-medium hover:bg-[rgba(255,255,255,0.05)] transition-colors">Go to Settings</Link>
           </div>
         </div>
       </div>
@@ -198,10 +197,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3"><BarChart3 size={20} className="text-[#FBBC04]" /><span className="text-sm font-medium text-[#E8EAED]">View Analytics</span></div>
           <ArrowRight size={16} className="text-[#5F6368] group-hover:text-[#8AB4F8] transition-colors" />
         </Link>
-        <Link to="/settings" className="glass-card flex items-center justify-between group">
-          <div className="flex items-center gap-3"><Database size={20} className="text-[#34A853]" /><span className="text-sm font-medium text-[#E8EAED]">Configure Sheet</span></div>
-          <ArrowRight size={16} className="text-[#5F6368] group-hover:text-[#8AB4F8] transition-colors" />
-        </Link>
+
       </motion.div>
     </div>
   );

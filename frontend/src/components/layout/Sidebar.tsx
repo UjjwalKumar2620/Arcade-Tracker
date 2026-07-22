@@ -5,12 +5,13 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard, Users, BarChart3,
+  Home, LayoutDashboard, Users, BarChart3,
   Trophy, Menu, X, ChevronLeft,
 } from 'lucide-react';
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+  { to: '/', label: 'Home', icon: <Home size={20} /> },
+  { to: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
   { to: '/participants', label: 'Participants', icon: <Users size={20} /> },
   { to: '/analytics', label: 'Analytics', icon: <BarChart3 size={20} /> },
 ];
