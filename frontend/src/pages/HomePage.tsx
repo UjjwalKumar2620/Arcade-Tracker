@@ -47,21 +47,11 @@ function assignToHelpers(nonStarters: Participant[]): Record<string, Participant
     remaining.splice(adrikaIdx, 1);
   }
 
-  // 3. Distribute remaining equally among all helpers
-  const perHelper = Math.floor(remaining.length / HELPERS.length);
-  const leftover = remaining.length % HELPERS.length;
-  let idx = 0;
-
-  for (let h = 0; h < HELPERS.length; h++) {
-    for (let c = 0; c < perHelper && idx < remaining.length; c++, idx++) {
-      assignments[HELPERS[h]].push(remaining[idx]);
-    }
-  }
-
-  // 4. Any leftover participants go to Ujjwal
-  while (idx < remaining.length) {
-    assignments['Ujjwal'].push(remaining[idx]);
-    idx++;
+  // 3. Round-robin: distribute remaining one-by-one across helpers
+  //    e.g. 44 remaining / 12 helpers → first 8 helpers get 4, last 4 get 3
+  for (let i = 0; i < remaining.length; i++) {
+    const helperIndex = i % HELPERS.length;
+    assignments[HELPERS[helperIndex]].push(remaining[i]);
   }
 
   return assignments;
@@ -264,7 +254,7 @@ export default function HomePage() {
       >
         <GlassCard hover={false} className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-[rgba(139,92,246,0.15)] text-[#A855F7]">
+            <div className="p-2.5 rounded-xl bg-[rgba(0,102,255,0.15)] text-[#0066FF]">
               <HeartHandshake size={22} />
             </div>
             <div>
@@ -275,27 +265,30 @@ export default function HomePage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {HELPERS.map((name, i) => (
+            {HELPERS.map((name, i) => {
+              const isUjjwal = name === 'Ujjwal';
+              return (
               <motion.span
                 key={name}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3 + i * 0.04 }}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium"
-                style={{
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium ${isUjjwal ? 'fire-badge' : ''}`}
+                style={isUjjwal ? {} : {
                   background: `${COLORS_HELPERS[i % COLORS_HELPERS.length]}15`,
                   color: COLORS_HELPERS[i % COLORS_HELPERS.length],
                   border: `1px solid ${COLORS_HELPERS[i % COLORS_HELPERS.length]}30`,
                 }}
               >
-                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
-                  style={{ background: COLORS_HELPERS[i % COLORS_HELPERS.length] }}
+                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${isUjjwal ? 'fire-avatar' : ''}`}
+                  style={isUjjwal ? { background: 'linear-gradient(135deg, #FF4400, #FF6B00)' } : { background: COLORS_HELPERS[i % COLORS_HELPERS.length] }}
                 >
                   {name.charAt(0)}
                 </span>
                 {name}
               </motion.span>
-            ))}
+              );
+            })}
           </div>
         </GlassCard>
       </motion.div>
@@ -423,8 +416,8 @@ export default function HomePage() {
   );
 }
 
-// Neon helper badge colors
+// Bold dark helper badge colors — NO red, NO pink (red is exclusive to Ujjwal's fire badge)
 const COLORS_HELPERS = [
-  '#00FFE5', '#FF00FF', '#39FF14', '#FFE500', '#FF3131', '#FF69B4',
-  '#00BFFF', '#FF6600', '#BF5FFF', '#ADFF2F', '#00CED1', '#FF1493',
+  '#0066FF', '#00FFE5', '#39FF14', '#FFB800', '#7C3AED', '#00BFFF',
+  '#4F46E5', '#06B6D4', '#22C55E', '#FACC15', '#6366F1', '#14B8A6',
 ];
