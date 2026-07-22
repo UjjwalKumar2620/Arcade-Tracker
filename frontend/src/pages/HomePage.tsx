@@ -172,18 +172,19 @@ export default function HomePage() {
   }, []);
 
   const notClaimed = participants.filter(
-    p => !p.access_code || p.access_code.toLowerCase() === 'no' || p.access_code.toLowerCase() === 'not redeemed',
+    p => !p.access_code || p.access_code.trim().toLowerCase() !== 'yes',
   );
 
   const notStarted = participants.filter(
-    p => p.skill_badges === 0 && p.arcade_games_completed === 0,
+    p => (p.skill_badges || 0) === 0 && (p.arcade_games_completed || 0) === 0,
   );
 
   // Wrong profiles: status exists and is NOT a "good" status
   const GOOD_STATUSES = ['all good', 'yes', 'ok', 'valid', 'verified', 'success'];
   const isWrongStatus = (status: string | null): boolean => {
     if (!status) return false; // null/empty means not submitted — not "wrong"
-    return !GOOD_STATUSES.includes(status.toLowerCase().trim());
+    const lower = status.toLowerCase().trim();
+    return !GOOD_STATUSES.some(good => lower.includes(good));
   };
 
   const wrongDevProfile = participants.filter(p => isWrongStatus(p.developer_profile_status));
