@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 import {
   ExternalLink, Video, FileText, Users, HeartHandshake,
   ChevronDown, ChevronUp, AlertTriangle, Rocket,
-  ArrowRight, BarChart3, Gamepad2, Sparkles,
+  ArrowRight, BarChart3, Sparkles,
 } from 'lucide-react';
 import { fetchParticipants } from '../lib/api';
 import { GlassCard, LoadingSpinner } from '../components/ui';
@@ -27,28 +27,41 @@ function assignToHelpers(nonStarters: Participant[]): Record<string, Participant
   const assignments: Record<string, Participant[]> = {};
   for (const h of HELPERS) assignments[h] = [];
 
-  // Anshika Tomar → always Ujjwal
-  const anshikaIndex = nonStarters.findIndex(p =>
+  let remaining = [...nonStarters];
+
+  // 1. Anshika Tomar → always Ujjwal
+  const anshikaIdx = remaining.findIndex(p =>
     p.name.toLowerCase().includes('anshika tomar'),
   );
-  let remaining = [...nonStarters];
-  if (anshikaIndex !== -1) {
-    assignments['Ujjwal'].push(remaining[anshikaIndex]);
-    remaining.splice(anshikaIndex, 1);
+  if (anshikaIdx !== -1) {
+    assignments['Ujjwal'].push(remaining[anshikaIdx]);
+    remaining.splice(anshikaIdx, 1);
   }
 
-  // Distribute remaining equally
+  // 2. Adrika Gaur → always Dev
+  const adrikaIdx = remaining.findIndex(p =>
+    p.name.toLowerCase().includes('adrika gaur'),
+  );
+  if (adrikaIdx !== -1) {
+    assignments['Dev'].push(remaining[adrikaIdx]);
+    remaining.splice(adrikaIdx, 1);
+  }
+
+  // 3. Distribute remaining equally among all helpers
   const perHelper = Math.floor(remaining.length / HELPERS.length);
-  const extraCount = remaining.length % HELPERS.length;
+  const leftover = remaining.length % HELPERS.length;
   let idx = 0;
 
   for (let h = 0; h < HELPERS.length; h++) {
-    const helperName = HELPERS[h];
-    // Ujjwal (index 0) gets the extra people if there's a remainder
-    const count = perHelper + (h === 0 && extraCount > 0 ? extraCount : 0);
-    for (let c = 0; c < count && idx < remaining.length; c++, idx++) {
-      assignments[helperName].push(remaining[idx]);
+    for (let c = 0; c < perHelper && idx < remaining.length; c++, idx++) {
+      assignments[HELPERS[h]].push(remaining[idx]);
     }
+  }
+
+  // 4. Any leftover participants go to Ujjwal
+  while (idx < remaining.length) {
+    assignments['Ujjwal'].push(remaining[idx]);
+    idx++;
   }
 
   return assignments;
@@ -190,9 +203,13 @@ export default function HomePage() {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-          className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#8B5CF6] via-[#3B82F6] to-[#34A853] mx-auto flex items-center justify-center shadow-2xl shadow-[#8B5CF6]/30 mb-6"
+          className="w-28 h-28 sm:w-32 sm:h-32 rounded-full mx-auto mb-6 shadow-2xl shadow-[#00FFE5]/20 overflow-hidden"
         >
-          <Gamepad2 size={36} className="text-white" />
+          <img
+            src="/arcade-facilitator-badge.png"
+            alt="Google Cloud Arcade Facilitator Program"
+            className="w-full h-full object-cover"
+          />
         </motion.div>
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gradient mb-3">
           Google Cloud Arcade Tracker
@@ -382,32 +399,32 @@ export default function HomePage() {
       >
         <Link to="/dashboard" className="glass-card flex items-center justify-between group">
           <div className="flex items-center gap-3">
-            <BarChart3 size={20} className="text-[#4285F4]" />
+            <BarChart3 size={20} className="text-[#00BFFF]" />
             <span className="text-sm font-medium text-[#E8EAED]">Dashboard</span>
           </div>
-          <ArrowRight size={16} className="text-[#5F6368] group-hover:text-[#8AB4F8] transition-colors" />
+          <ArrowRight size={16} className="text-[#666] group-hover:text-[#00FFE5] transition-colors" />
         </Link>
         <Link to="/participants" className="glass-card flex items-center justify-between group">
           <div className="flex items-center gap-3">
-            <Users size={20} className="text-[#FBBC04]" />
+            <Users size={20} className="text-[#FFE500]" />
             <span className="text-sm font-medium text-[#E8EAED]">Participants</span>
           </div>
-          <ArrowRight size={16} className="text-[#5F6368] group-hover:text-[#8AB4F8] transition-colors" />
+          <ArrowRight size={16} className="text-[#666] group-hover:text-[#00FFE5] transition-colors" />
         </Link>
         <Link to="/analytics" className="glass-card flex items-center justify-between group">
           <div className="flex items-center gap-3">
-            <Gamepad2 size={20} className="text-[#34A853]" />
+            <BarChart3 size={20} className="text-[#39FF14]" />
             <span className="text-sm font-medium text-[#E8EAED]">Analytics</span>
           </div>
-          <ArrowRight size={16} className="text-[#5F6368] group-hover:text-[#8AB4F8] transition-colors" />
+          <ArrowRight size={16} className="text-[#666] group-hover:text-[#00FFE5] transition-colors" />
         </Link>
       </motion.div>
     </div>
   );
 }
 
-// Helper badge colors
+// Neon helper badge colors
 const COLORS_HELPERS = [
-  '#8B5CF6', '#3B82F6', '#34A853', '#FBBC04', '#EA4335', '#EC4899',
-  '#14B8A6', '#F97316', '#6366F1', '#84CC16', '#06B6D4', '#E11D48',
+  '#00FFE5', '#FF00FF', '#39FF14', '#FFE500', '#FF3131', '#FF69B4',
+  '#00BFFF', '#FF6600', '#BF5FFF', '#ADFF2F', '#00CED1', '#FF1493',
 ];

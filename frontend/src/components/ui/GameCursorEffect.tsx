@@ -16,7 +16,7 @@ interface Particle {
   maxLife: number;
 }
 
-const COLORS = ['#8B5CF6', '#A855F7', '#3B82F6', '#60A5FA', '#FBBC04', '#34A853', '#EC4899'];
+const COLORS = ['#00FFE5', '#FF00FF', '#39FF14', '#00BFFF', '#FFE500', '#FF1493', '#BF5FFF'];
 
 export function GameCursorEffect() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
