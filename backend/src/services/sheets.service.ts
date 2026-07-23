@@ -191,6 +191,19 @@ export async function fetchGoogleSheet(sheetUrl: string): Promise<SheetFetchResu
     if (digitalBadge) completion += 15;
     completion = Math.min(Math.round(completion * 100) / 100, 100);
 
+    const milestoneVal = getVal('milestone');
+    const milestoneAchievedNames = [
+      'pranjal vashishth',
+      'akshara singh',
+      'siddharth tiwari',
+      'shubham garg',
+    ];
+    const nameLower = (name || '').toLowerCase().trim();
+    const isMilestoneName = milestoneAchievedNames.some(m => nameLower.includes(m));
+    const milestone = (milestoneVal && !['no', 'none', '0', 'false', ''].includes(milestoneVal.toLowerCase().trim()))
+      ? milestoneVal
+      : (isMilestoneName ? 'Milestone 1' : null);
+
     participants.push({
       row_index: i,
       name: name || email.split('@')[0],
@@ -200,7 +213,7 @@ export async function fetchGoogleSheet(sheetUrl: string): Promise<SheetFetchResu
       developer_profile: getVal('developer_profile'),
       developer_profile_status: getVal('developer_profile_status'),
       access_code: getVal('access_code'),
-      milestone: getVal('milestone'),
+      milestone: milestone,
       bonus_milestone: getVal('bonus_milestone'),
       verification_status: getVal('verification_status'),
       gear_status: gearStatus,

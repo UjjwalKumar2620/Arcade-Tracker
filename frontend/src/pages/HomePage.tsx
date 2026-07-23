@@ -9,11 +9,12 @@ import { Link } from 'react-router-dom';
 import {
   ExternalLink, Video, FileText, Users, HeartHandshake,
   ChevronDown, ChevronUp, AlertTriangle, Rocket,
-  ArrowRight, BarChart3, Sparkles, Link2, UserX,
+  ArrowRight, BarChart3, Sparkles, Link2, UserX, Star,
 } from 'lucide-react';
 import { fetchParticipants } from '../lib/api';
 import { GlassCard, LoadingSpinner } from '../components/ui';
 import type { Participant } from '../types';
+import { hasMilestone } from './ParticipantsPage';
 
 // ── Helpers ──────────────────────────────────────────────────
 const HELPERS = [
@@ -339,7 +340,14 @@ export default function HomePage() {
                     <span className="w-5 h-5 rounded-full bg-[rgba(251,188,4,0.2)] text-[#FBBC04] flex items-center justify-center text-[10px] font-bold">
                       {i + 1}
                     </span>
-                    <span className="text-[#E8EAED] truncate">{p.name}</span>
+                    <span className="text-[#E8EAED] truncate flex items-center gap-1">
+                      {hasMilestone(p) && (
+                        <span title="Milestone 1 Achieved" className="inline-flex items-center">
+                          <Star size={14} className="text-[#FFB800] fill-[#FFB800] shrink-0" />
+                        </span>
+                      )}
+                      <span>{p.name}</span>
+                    </span>
                   </div>
                 ))}
               </div>
@@ -381,7 +389,14 @@ export default function HomePage() {
                             <span className="w-4 h-4 rounded-full bg-[rgba(234,67,53,0.2)] text-[#EE675C] flex items-center justify-center text-[9px] font-bold">
                               {i + 1}
                             </span>
-                            <span className="text-[#E8EAED] truncate text-xs">{p.name}</span>
+                            <span className="text-[#E8EAED] truncate text-xs flex items-center gap-1">
+                              {hasMilestone(p) && (
+                                <span title="Milestone 1 Achieved" className="inline-flex items-center">
+                                  <Star size={12} className="text-[#FFB800] fill-[#FFB800] shrink-0" />
+                                </span>
+                              )}
+                              <span>{p.name}</span>
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -414,7 +429,14 @@ export default function HomePage() {
                       {i + 1}
                     </span>
                     <div className="min-w-0">
-                      <span className="text-[#E8EAED] truncate block text-xs">{p.name}</span>
+                      <span className="text-[#E8EAED] truncate block text-xs flex items-center gap-1">
+                        {hasMilestone(p) && (
+                          <span title="Milestone 1 Achieved" className="inline-flex items-center">
+                            <Star size={12} className="text-[#FFB800] fill-[#FFB800] shrink-0" />
+                          </span>
+                        )}
+                        <span>{p.name}</span>
+                      </span>
                       <span className="text-[10px] text-[#FFB800] truncate block">{p.developer_profile_status}</span>
                     </div>
                   </div>
@@ -445,7 +467,14 @@ export default function HomePage() {
                       {i + 1}
                     </span>
                     <div className="min-w-0">
-                      <span className="text-[#E8EAED] truncate block text-xs">{p.name}</span>
+                      <span className="text-[#E8EAED] truncate block text-xs flex items-center gap-1">
+                        {hasMilestone(p) && (
+                          <span title="Milestone 1 Achieved" className="inline-flex items-center">
+                            <Star size={12} className="text-[#FFB800] fill-[#FFB800] shrink-0" />
+                          </span>
+                        )}
+                        <span>{p.name}</span>
+                      </span>
                       <span className="text-[10px] text-[#7C3AED] truncate block">{p.google_skills_profile_status}</span>
                     </div>
                   </div>

@@ -9,11 +9,26 @@ import { Link } from 'react-router-dom';
 import {
   Users, Search, ChevronLeft, ChevronRight,
   ExternalLink, ArrowUpDown, ShieldCheck, ShieldAlert,
-  Award, Gamepad2, Eye, RefreshCw, Filter,
+  Award, Gamepad2, Eye, RefreshCw, Filter, Star,
 } from 'lucide-react';
 import { fetchParticipants, refreshData } from '../lib/api';
 import { PageHeader, LoadingSpinner, EmptyState, ProgressBar, StatusBadge, PointSystemInfoCard } from '../components/ui';
 import type { Participant } from '../types';
+
+const MILESTONE_NAMES = [
+  'pranjal vashishth',
+  'akshara singh',
+  'siddharth tiwari',
+  'shubham garg',
+];
+
+export function hasMilestone(p: { milestone?: string | null; name?: string }): boolean {
+  if (p.milestone && !['no', 'none', '0', 'false', ''].includes(p.milestone.trim().toLowerCase())) {
+    return true;
+  }
+  const nameLower = (p.name || '').toLowerCase().trim();
+  return MILESTONE_NAMES.some(m => nameLower.includes(m));
+}
 
 export default function ParticipantsPage() {
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -200,7 +215,22 @@ export default function ParticipantsPage() {
                     </td>
                     <td className="py-4 px-4">
                       <div>
-                        <div className="font-semibold text-[#E8EAED]">{p.name}</div>
+                        <div className="font-semibold text-[#E8EAED] flex items-center gap-1.5">
+                          {hasMilestone(p) && (
+                            <span title="Milestone 1 Achieved" className="inline-flex items-center">
+                              <Star
+                                size={16}
+                                className="text-[#FFB800] fill-[#FFB800] shrink-0"
+                              />
+                            </span>
+                          )}
+                          <span>{p.name}</span>
+                          {hasMilestone(p) && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[rgba(255,184,0,0.15)] text-[#FFB800] border border-[rgba(255,184,0,0.3)] font-semibold ml-1">
+                              Milestone 1
+                            </span>
+                          )}
+                        </div>
                         <div className="text-xs text-[#9AA0A6]">{p.email}</div>
                       </div>
                     </td>

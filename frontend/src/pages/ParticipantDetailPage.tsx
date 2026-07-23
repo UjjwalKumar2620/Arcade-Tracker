@@ -14,6 +14,8 @@ import { fetchParticipant } from '../lib/api';
 import { GlassCard, LoadingSpinner, ProgressBar, PointSystemInfoCard } from '../components/ui';
 import type { Participant } from '../types';
 
+import { hasMilestone } from './ParticipantsPage';
+
 export default function ParticipantDetailPage() {
   const { rowIndex } = useParams<{ rowIndex: string }>();
   const navigate = useNavigate();
@@ -73,7 +75,22 @@ export default function ParticipantDetailPage() {
               {p.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#E8EAED]">{p.name}</h1>
+              <div className="flex items-center gap-2">
+                {hasMilestone(p) && (
+                  <span title="Milestone 1 Achieved" className="inline-flex items-center">
+                    <Star
+                      size={22}
+                      className="text-[#FFB800] fill-[#FFB800] shrink-0"
+                    />
+                  </span>
+                )}
+                <h1 className="text-2xl font-bold text-[#E8EAED]">{p.name}</h1>
+                {hasMilestone(p) && (
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-[rgba(255,184,0,0.15)] text-[#FFB800] border border-[rgba(255,184,0,0.3)] font-bold">
+                    Milestone 1
+                  </span>
+                )}
+              </div>
               <p className="text-sm text-[#9AA0A6]">{p.email}</p>
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <span className="text-xs px-2.5 py-1 rounded-full bg-[rgba(251,188,4,0.2)] text-[#FBBC04] font-bold">

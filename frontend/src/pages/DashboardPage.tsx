@@ -8,11 +8,12 @@ import { Link } from 'react-router-dom';
 import {
   Users, Award, Gamepad2, Shield, ShieldCheck, ShieldX,
   RefreshCw, TrendingUp, CheckCircle, AlertCircle,
-  ArrowRight, BarChart3, Key, Clock, Zap, Database,
+  ArrowRight, BarChart3, Key, Clock, Zap, Database, Star,
 } from 'lucide-react';
 import { fetchDashboardStats, refreshData } from '../lib/api';
 import { StatCard, LoadingSpinner, GlassCard, PointSystemInfoCard } from '../components/ui';
 import type { DashboardStats } from '../types';
+import { hasMilestone } from './ParticipantsPage';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -171,7 +172,14 @@ export default function DashboardPage() {
                         {i + 1}
                       </span>
                       <div>
-                        <div className="text-sm text-[#E8EAED] font-medium truncate">{p.name}</div>
+                        <div className="text-sm text-[#E8EAED] font-medium truncate flex items-center gap-1.5">
+                          {hasMilestone(p) && (
+                            <span title="Milestone 1 Achieved" className="inline-flex items-center">
+                              <Star size={14} className="text-[#FFB800] fill-[#FFB800] shrink-0" />
+                            </span>
+                          )}
+                          <span>{p.name}</span>
+                        </div>
                         <div className="text-[11px] text-[#9AA0A6]">🎮 {p.arcade_games} games • ⭐ {p.skill_badges} badges</div>
                       </div>
                     </div>
